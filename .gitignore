@@ -1,0 +1,9 @@
+*
+
+!.gitignore
+!compose.yml
+!consumidor.js
+!package.json
+!PLANO_RETRY_DLQ_MANICURE_2026-10-16 (1).md
+!pnpm-lock.yaml
+!topologia.js
