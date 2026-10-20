@@ -211,11 +211,11 @@ async function main() {
   const ch = await conn.createChannel()
 
   await ch.assertExchange('ex.teste', 'direct', { durable: false })
-  await ch.assertQueue('teste.consumida', { durable: false })
+  await ch.assertQueue('teste.consumida', { durable: true })
   await ch.bindQueue('teste.consumida', 'ex.teste', 'volta')
 
   await ch.assertQueue('espera.unica', {
-    durable: false,
+    durable: true,
     arguments: {
       'x-dead-letter-exchange': 'ex.teste',
       'x-dead-letter-routing-key': 'volta',
@@ -231,6 +231,8 @@ async function main() {
 
 main().catch((e) => { console.error(e); process.exit(1) })
 ```
+
+**Por que as filas aqui são `durable: true`.** A combinação não-durable com não-exclusiva está depreciada no RabbitMQ desde 2021, e **a partir da versão 4.3 a declaração dessa combinação é recusada por padrão**. Como a imagem `rabbitmq:4-management` puxa a última 4.x, que é a 4.3, uma fila declarada com `durable: false` e sem `exclusive` derruba a conexão com erro. As três saídas aceitas hoje são: fila durable, que é a usada aqui; fila não-durable **exclusiva**, que morre junto com a conexão; ou fila durable com TTL de fila. Se você topar um tutorial antigo que use fila não-durable, dá para liberar o comportamento antigo com `deprecated_features.permit.transient_nonexcl_queues = true` no `rabbitmq.conf`.
 
 Rode `node naive.js` e abra a fila `espera.unica` no painel. A mensagem B, que deveria sair em um minuto, vai esperar dez, porque o RabbitMQ só remove mensagem do início da fila. Você acabou de ver, na sua frente, o motivo pelo qual a fila única de espera não serve.
 
@@ -500,6 +502,7 @@ A 6 ou 8 horas por semana, de 5 a 7 semanas. A 10 horas por semana, contando fim
 | Consumidor morre e não volta | Ausência de reconexão | Use `amqp-connection-manager` |
 | Mensagem processada duas vezes | Sem idempotência | Etapa 5 |
 | Fila morta crescendo sempre | Erro de validação entrando no retry | Etapa 4, classificação de erro |
+| Erro ao declarar fila recém-criada | Fila não-durable e não-exclusiva, combinação recusada a partir do RabbitMQ 4.3 | Use `durable: true`, ou `exclusive: true`, ou fila durable com TTL |
 
 ## Apêndice: todos os links, em um lugar
 

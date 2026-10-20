@@ -1,14 +1,14 @@
 const amqp = require("amqplib");
 
 const EX_RETRY = "ex.retry";
-const Q_MAIN = "notification.appointment";
+const Q_MAIN = "notifications.appointment";
 const PROXIMO = { 1: "retry.2", 2: "retry.3" };
 const MAX_TENTATIVAS = 3;
 
 async function main() {
-    const conn = await amqp.connect("amqp://localhost:5672");
-    const ch = conn.createChannel();
-    await ch.prefetch(1);
+    const conn = await amqp.connect("amqp://manicure:manicure@localhost:5672");
+    const ch = await conn.createChannel();
+    await ch.prefetch(1)
 
     ch.consume(Q_MAIN, (msg) => {
         if (!msg) return;
@@ -30,14 +30,14 @@ async function main() {
         }
 
         if (tentativa >= MAX_TENTATIVAS) {
-            ch.publush(EX_RETRY, "parking", msg.content, msg.properties);
+            ch.publish(EX_RETRY, "parking", msg.content, msg.properties);
             ch.ack(msg);
             console.log(" tentativas esgotadas, foi para o estacionamento");
             return;
         }
 
         const proxima = tentativa + 1;
-        ch.publush(EX_RETRY, PROXIMO[tentativa], msg.content, {
+        ch.publish(EX_RETRY, PROXIMO[tentativa], msg.content, {
             ...msg.properties,
             headers: {
                 ...(msg.properties.headers || {}),

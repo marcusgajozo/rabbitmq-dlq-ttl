@@ -3,7 +3,9 @@
 !.gitignore
 !compose.yml
 !consumidor.js
+!naive.js
 !package.json
-!PLANO_RETRY_DLQ_MANICURE_2026-10-16 (1).md
+!PLANO_RETRY_DLQ_MANICURE_2026-10-16 (2).md
 !pnpm-lock.yaml
+!produtor.js
 !topologia.js
